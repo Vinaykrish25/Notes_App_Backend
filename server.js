@@ -17,6 +17,7 @@ const app = express();
 app.use(express.json());
 app.use(cors({
     origin: ["https://notes-app-frontend-gamma.vercel.app", "http://localhost:3000"],
+    methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true
 }))
 app.use(cookieParser());
