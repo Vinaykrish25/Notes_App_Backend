@@ -27,9 +27,10 @@ app.use(cookieParser());
 
 // Enable CORS, allowing requests from your frontend URLs and localhost during development
 app.use(cors({
-    origin: ["https://notes-app-frontend-rouge.vercel.app/", "http://localhost:3000"],
+    origin: ["https://notes-app-frontend-rouge.vercel.app", "http://localhost:3000"],  // Removed trailing slash
     methods: ["GET", "POST", "PATCH", "DELETE"],
-    credentials: true
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"]  // Ensure headers you use are allowed
 }));
 
 // Define your API routes with authentication protection for notes
