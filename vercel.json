@@ -12,7 +12,7 @@
       "dest": "server.js",
       "methods": ["GET", "POST", "PATCH", "DELETE"],
       "headers": {
-        "Access-Control-Allow-Origin": ["https://notes-app-frontend-gamma.vercel.app/", "http://localhost:3000/"],
+        "Access-Control-Allow-Origin": ["https://notes-app-frontend-rzjm.vercel.app/", "http://localhost:3000/"],
         "Access-Control-Allow-Credentials": "true",
         "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
       }
