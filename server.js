@@ -16,7 +16,7 @@ mongoose.connect(process.env.DATABASE_URL).then(() => {
 const app = express();
 app.use(express.json());
 app.use(cors({
-    origin: "https://notes-app-frontend-ecru.vercel.app/",
+    origin: "https://notes-app-frontend-theta.vercel.app/",
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     credentials: true
 }))

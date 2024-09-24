@@ -8,7 +8,7 @@
     ],
     "routes": [
         {
-            "src": "/(.*)",
+            "src": "/http://localhost:5000/(.*)",
             "dest": "server.js"
         }
     ]
