@@ -27,7 +27,7 @@ app.use(cookieParser());
 
 // Enable CORS, allowing requests from your frontend URLs and localhost during development
 app.use(cors({
-    origin: ["https://notes-app-frontend-rzjm.vercel.app/", "http://localhost:3000"],
+    origin: ["https://notes-app-frontend-rouge.vercel.app/", "http://localhost:3000"],
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true
 }));
