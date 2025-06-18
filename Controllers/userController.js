@@ -60,7 +60,9 @@ exports.loginUser = async (req, res, next) => {
         const token = generateToken(user._id, user.username, user.email);
 
         // Set JWT in cookies
-        res.cookie('jwt', token, { maxAge: 3600000, httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+        res.cookie('jwt', token, { maxAge: 3600000, httpOnly: true,  
+        secure: true, // required for HTTPS (Vercel)
+        sameSite: 'None', }); // important for cross-site cookies 
         
         res.status(200).json({
             message: "Login successful",

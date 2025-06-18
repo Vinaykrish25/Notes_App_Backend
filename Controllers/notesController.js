@@ -125,7 +125,7 @@ exports.getNotes = async (req, res, next) => {
         queryObject.createdBy = req.user.email; // Use ObjectId
 
         // Optional: Implement additional filtering, sorting, pagination as needed
-        const displayedNotes = await notesModel.find(queryObject);
+        const displayedNotes = await notesModel.find(queryObject).lean();
 
         if (!displayedNotes || displayedNotes.length === 0) {
             return res.status(404).json({
