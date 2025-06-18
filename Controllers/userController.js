@@ -96,7 +96,13 @@ exports.verifyUser = async (req, res, next) => {
 
 // Logout user
 exports.logoutUser = (req, res) => {
-    res.cookie("jwt", "", { httpOnly: true, expires: new Date(0) }); // Clear the JWT cookie
+    res.cookie('jwt', '', {
+        httpOnly: true,
+        secure: true, // important for Vercel
+        sameSite: 'None',
+        expires: new Date(0),  // expire immediately
+        path: '/'              // ensure path matches the login cookie
+    });
     res.status(200).json({
         message: "Logout successful"
     });
