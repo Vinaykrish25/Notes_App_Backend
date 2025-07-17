@@ -24,6 +24,9 @@ Here’s the initial version with sections 1–5:
 
 # 📝 Notes App – Backend (Express + MongoDB)
 
+
+🔗 **Live Demo:** [Notes App](https://notes-app-frontend-l6mi.vercel.app/)
+
 This is the **backend API** for the full-stack Notes Application. It provides secure, RESTful endpoints for user registration, login, and managing notes. It’s built with **Node.js**, **Express**, and **MongoDB**.
 
 ---
