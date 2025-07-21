@@ -1,79 +1,88 @@
 const mongoose = require('mongoose');
 
-// Function to get the current date (YYYY-MM-DD)
+// ✅ Format local date as YYYY-MM-DD (India timezone)
+const formatLocalDate = (date) => {
+    return new Intl.DateTimeFormat('en-CA', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        timeZone: 'Asia/Kolkata',
+    }).format(date);
+};
+
+// ✅ Format local time as HH:MM AM/PM (India timezone)
+const formatLocalTime = (date) => {
+    return new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Kolkata',
+    }).format(date);
+};
+
+// ✅ Return current local date
 const getCurrentDate = () => {
-    const today = new Date();
-    const localDate = new Date(today.toLocaleDateString('en-CA')); // Format as YYYY-MM-DD
-    return localDate;
+    return new Date(); // We'll format it using getters
 };
 
-// Function to get the current time in HH:MM AM/PM format
+// ✅ Return current local time
 const getCurrentTime = () => {
-    const today = new Date();
-    let hours = today.getHours();
-    const minutes = today.getMinutes().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12; // Convert 0 hour to 12
-    return `${hours}:${minutes} ${ampm}`;
+    return formatLocalTime(new Date());
 };
 
-const notesSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        maxlength: [10, "Title length should not exceed 10 characters"],
-        unique: true
-    },
-    content: {
-        type: String,
-        required: [true, "Not allowed to create an empty note"],
-    },
-    createdDate: {
-        type: Date,
-        default: getCurrentDate, // Automatically assigns current date
-        get: function (v) {
-            return v.toISOString().split('T')[0]; // Returns only the date part (YYYY-MM-DD)
-        }
-    },
-    createdTime: {
-        type: String,
-        default: getCurrentTime, // Automatically assigns current time
-        validate: {
-            validator: function (v) {
-                return /^\d{1,2}:\d{2} (AM|PM)$/.test(v); // Validates the time format
+const notesSchema = new mongoose.Schema(
+    {
+        title: {
+            type: String,
+            maxlength: [10, "Title length should not exceed 10 characters"],
+            unique: true,
+        },
+        content: {
+            type: String,
+            required: [true, "Not allowed to create an empty note"],
+        },
+        createdDate: {
+            type: Date,
+            default: getCurrentDate,
+            get: (v) => formatLocalDate(v),
+        },
+        createdTime: {
+            type: String,
+            default: getCurrentTime,
+            validate: {
+                validator: (v) => /^\d{1,2}:\d{2} (AM|PM)$/.test(v),
+                message: (props) =>
+                    `${props.value} is not a valid time format (HH:MM AM/PM)!`,
             },
-            message: props => `${props.value} is not a valid time format (HH:MM AM/PM)!`,
+        },
+        updatedDate: {
+            type: Date,
+            default: getCurrentDate,
+            get: (v) => formatLocalDate(v),
+        },
+        updatedTime: {
+            type: String,
+            default: getCurrentTime,
+            validate: {
+                validator: (v) => /^\d{1,2}:\d{2} (AM|PM)$/.test(v),
+                message: (props) =>
+                    `${props.value} is not a valid time format (HH:MM AM/PM)!`,
+            },
+        },
+        createdBy: {
+            type: String,
+            ref: 'User',
+            required: [true, 'A note must have an owner'],
         },
     },
-    updatedDate: {
-        type: Date,
-        default: getCurrentDate, // Automatically assigns current date
-        get: function (v) {
-            return v.toISOString().split('T')[0]; // Returns only the date part (YYYY-MM-DD)
-        }
-    },
-    updatedTime: {
-        type: String,
-        default: getCurrentTime, // Automatically assigns current time
-        validate: {
-            validator: function (v) {
-                return /^\d{1,2}:\d{2} (AM|PM)$/.test(v); // Validates the time format
-            },
-            message: props => `${props.value} is not a valid time format (HH:MM AM/PM)!`,
-        },
-    },
-    createdBy: {
-        type: String,
-        ref: 'User',
-        required: [true, 'A note must have an owner']
+    {
+        collection: "notes",
+        toObject: { getters: true },
+        toJSON: { getters: true }, // ✅ ensures getters are applied in JSON response
     }
-}, { 
-    collection: "notes", 
-    toObject: { getters: true }, 
-    toJSON: { getters: true } 
-});
+);
 
-// Pre-save middleware to update `updatedDate` and `updatedTime` on document modification
+// ✅ Auto-update updatedDate/Time when modified
 notesSchema.pre('save', function (next) {
     if (!this.isNew && this.isModified()) {
         this.updatedDate = getCurrentDate();
@@ -82,19 +91,19 @@ notesSchema.pre('save', function (next) {
     next();
 });
 
-// Pre 'findOneAndUpdate' middleware to update `updatedDate` and `updatedTime` on query updates
 notesSchema.pre('findOneAndUpdate', function (next) {
     const update = this.getUpdate();
 
     if (update) {
-        // If the update is using $set, modify the $set object
+        const now = new Date();
+        const formattedTime = formatLocalTime(now);
+
         if (update.$set) {
-            update.$set.updatedDate = getCurrentDate();
-            update.$set.updatedTime = getCurrentTime();
+            update.$set.updatedDate = now;
+            update.$set.updatedTime = formattedTime;
         } else {
-            // Otherwise, directly set the fields
-            update.updatedDate = getCurrentDate();
-            update.updatedTime = getCurrentTime();
+            update.updatedDate = now;
+            update.updatedTime = formattedTime;
         }
     }
 

@@ -1,14 +1,23 @@
-// controllers/notesController.js
-
-const notesModel = require("../Models/notesModel"); // Ensure correct path
+const notesModel = require("../Models/notesModel");
 const mongoose = require("mongoose");
 
-// Create a new note
+// ✅ Helper to ensure formatted response (keeps date/time clean)
+const formatNoteResponse = (note) => ({
+  id: note._id.toString(),
+  title: note.title,
+  content: note.content,
+  createdDate: note.createdDate,
+  createdTime: note.createdTime,
+  updatedDate: note.updatedDate,
+  updatedTime: note.updatedTime,
+  createdBy: note.createdBy,
+});
+
+// ✅ Create a new note
 exports.createNotes = async (req, res, next) => {
   try {
     const { title, content } = req.body;
 
-    // Validate required fields
     if (!title || !content) {
       return res.status(400).json({
         status: "fail",
@@ -16,28 +25,26 @@ exports.createNotes = async (req, res, next) => {
       });
     }
 
-    // Create the note with 'createdBy' set to the user's _id
     const createdNote = await notesModel.create({
       title,
       content,
-      createdBy: req.user.email, // Use ObjectId
+      createdBy: req.user.email,
     });
 
     res.status(201).json({
       status: "success",
-      data: createdNote,
+      data: formatNoteResponse(createdNote.toObject()),
     });
   } catch (err) {
     next(err);
   }
 };
 
-// Update an existing note
+// ✅ Update an existing note
 exports.updateNotes = async (req, res, next) => {
   try {
     const noteId = req.params.id;
 
-    // Validate noteId
     if (!mongoose.Types.ObjectId.isValid(noteId)) {
       return res.status(400).json({
         status: "fail",
@@ -45,17 +52,11 @@ exports.updateNotes = async (req, res, next) => {
       });
     }
 
-    // Prepare the update object
     const updateData = { ...req.body };
+    if (updateData.createdBy) delete updateData.createdBy;
 
-    // Prevent users from changing the 'createdBy' field
-    if (updateData.createdBy) {
-      delete updateData.createdBy;
-    }
-
-    // Find the note by ID and ensure it belongs to the user
     const updatedNote = await notesModel.findOneAndUpdate(
-      { _id: noteId, createdBy: req.user.email }, // Ownership check
+      { _id: noteId, createdBy: req.user.email },
       updateData,
       { new: true, runValidators: true }
     );
@@ -63,26 +64,24 @@ exports.updateNotes = async (req, res, next) => {
     if (!updatedNote) {
       return res.status(404).json({
         status: "fail",
-        message:
-          "Note not found or you don't have permission to edit this note.",
+        message: "Note not found or you don't have permission to edit this note.",
       });
     }
 
     res.status(200).json({
       status: "success",
-      data: updatedNote,
+      data: formatNoteResponse(updatedNote.toObject()),
     });
   } catch (err) {
     next(err);
   }
 };
 
-// Delete an existing note
+// ✅ Delete an existing note
 exports.deleteNotes = async (req, res, next) => {
   try {
     const noteId = req.params.id;
 
-    // Validate noteId
     if (!mongoose.Types.ObjectId.isValid(noteId)) {
       return res.status(400).json({
         status: "fail",
@@ -90,16 +89,15 @@ exports.deleteNotes = async (req, res, next) => {
       });
     }
 
-    // Find the note by ID and ensure it belongs to the user
-    const deletedNote = await notesModel.findOneAndDelete(
-      { _id: noteId, createdBy: req.user.email } // Ownership check
-    );
+    const deletedNote = await notesModel.findOneAndDelete({
+      _id: noteId,
+      createdBy: req.user.email,
+    });
 
     if (!deletedNote) {
       return res.status(404).json({
         status: "fail",
-        message:
-          "Note not found or you don't have permission to delete this note.",
+        message: "Note not found or you don't have permission to delete this note.",
       });
     }
 
@@ -112,30 +110,23 @@ exports.deleteNotes = async (req, res, next) => {
   }
 };
 
-// Get all notes for the logged-in user
+// ✅ Get all notes with formatted date/time
 exports.getNotes = async (req, res, next) => {
   try {
-    // Construct the query object
     const queryObject = { ...req.query };
-
-    // Remove any fields from queryObject that should not be queryable by the user
     delete queryObject.createdBy;
+    queryObject.createdBy = req.user.email;
 
-    // Add the 'createdBy' filter to ensure only user's notes are fetched
-    queryObject.createdBy = req.user.email; // Use ObjectId
-
-    // Optional: Implement additional filtering, sorting, pagination as needed
     const displayedNotes = await notesModel.find(queryObject).lean();
 
-    const notesWithId = displayedNotes.map((note) => ({
-      ...note,
-      id: note._id.toString(), // stringified Mongo ID
-    }));
+    const notesWithFormattedData = displayedNotes.map((note) =>
+      formatNoteResponse(note)
+    );
 
     res.status(200).json({
       status: "success",
-      results: notesWithId.length,
-      data: notesWithId,
+      results: notesWithFormattedData.length,
+      data: notesWithFormattedData,
     });
   } catch (err) {
     next(err);
